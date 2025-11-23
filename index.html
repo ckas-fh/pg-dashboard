@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forecast of Completed Test Results - Probably Genetic</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.2.1"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #f8f9fa 0%, #f1f3f5 100%);
+            color: #2d3748;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 48px 64px;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 48px;
+        }
+
+        .header-left h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 6px;
+            letter-spacing: -0.02em;
+        }
+
+        .header-left p {
+            font-size: 20px;
+            color: #4a5568;
+            font-weight: 500;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pg-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 14px;
+            border-radius: 999px;
+            background: #f3e8ff;
+            color: #5b4e77;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.06);
+        }
+
+        .pg-badge span.pg-mark {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            border-radius: 999px;
+            background: #5b4e77;
+            color: #ffffff;
+            font-size: 11px;
+            font-weight: 700;
+            margin-right: 8px;
+        }
+
+        /* Chart Section */
+        .chart-section {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+            margin-bottom: 32px;
+            border: 1px solid #f0f2f5;
+            overflow: visible;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 440px;
+            width: 100%;
+            overflow: visible;
+        }
+
+        /* Summary Card */
+        .summary-card {
+            background: white;
+            border-radius: 16px;
+            padding: 48px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+            max-width: 640px;
+            margin: 0 auto;
+            text-align: center;
+            border: 1px solid #f0f2f5;
+        }
+
+        .card-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #5b4e77 0%, #6d5d8a 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+        }
+
+        .card-icon svg {
+            width: 24px;
+            height: 24px;
+            color: white;
+        }
+
+        .card-title {
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #718096;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .card-date {
+            font-size: 42px;
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 20px;
+            letter-spacing: -0.02em;
+        }
+
+        .card-details {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .card-detail {
+            font-size: 15px;
+            color: #4a5568;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #fef3c7;
+            color: #92400e;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            background: #f59e0b;
+            border-radius: 50%;
+        }
+
+        .card-update-time {
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid #e2e8f0;
+            font-size: 13px;
+            color: #a0aec0;
+        }
+
+        /* Legend */
+        .custom-legend {
+            display: flex;
+            justify-content: center;
+            gap: 32px;
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid #f0f2f5;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            color: #4a5568;
+        }
+
+        .legend-line {
+            width: 28px;
+            height: 3px;
+            border-radius: 2px;
+        }
+
+        .legend-line.historical {
+            background: #5b4e77;
+        }
+
+        .legend-line.forecast {
+            background: #b8a8cc;
+        }
+
+        .legend-line.goal {
+            background: repeating-linear-gradient(
+                to right,
+                #cbd5e0 0px,
+                #cbd5e0 4px,
+                transparent 4px,
+                transparent 8px
+            );
+            height: 2px;
+        }
+
+        .legend-line.deadline {
+            background: #94a3b8;
+            height: 2px;
+        }
+
+        .legend-line.projected {
+            background: #5b4e77;
+            height: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-left">
+                <h1>PharmaCo Partnership Milestone Tracking</h1>
+                <p>Projection of Completed Test Results</p>
+            </div>
+            <div class="header-right">
+                <div class="pg-badge">
+                    <span class="pg-mark">PG</span>
+                    <span>Probably Genetic</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chart Section -->
+        <div class="chart-section">
+            <div class="chart-container">
+                <canvas id="forecastChart"></canvas>
+            </div>
+            <div class="custom-legend">
+                <div class="legend-item">
+                    <div class="legend-line historical"></div>
+                    <span>Historical Data</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-line forecast"></div>
+                    <span>Forecasted Data</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-line goal"></div>
+                    <span>Milestone Goal (1,000 tests)</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Card -->
+        <div class="summary-card">
+            <div class="card-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+            </div>
+            <div class="card-title">Projected Date to Reach 1,000 Completed Tests</div>
+            <div class="card-date">October 9, 2025</div>
+            <div class="card-details">
+                <div class="card-detail">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M8 4V8L10.5 9.5" stroke="#718096" stroke-width="1.5" stroke-linecap="round"/>
+                        <circle cx="8" cy="8" r="6" stroke="#718096" stroke-width="1.5"/>
+                    </svg>
+                    <span>5 days after Oct 4 target date</span>
+                </div>
+                <div class="status-badge">
+                    <span class="status-dot"></span>
+                    <span>Acceleration recommended</span>
+                </div>
+            </div>
+            <div class="card-update-time">
+                Updated daily at 12:00 PM PST
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Historical data points (stop at Sep 30)
+        const historicalDates = [
+            '2025-09-15', '2025-09-18', '2025-09-21',
+            '2025-09-24', '2025-09-27', '2025-09-30'
+        ];
+        const historicalValues = [478, 503, 531, 568, 612, 673];
+
+        // Forecast data points: start at same point as last historical to avoid break,
+        // hit 1,000 on Oct 9, then continue above, but only through Oct 20
+        const forecastDates = [
+            '2025-09-30', '2025-10-03', '2025-10-06',
+            '2025-10-09', '2025-10-12', '2025-10-15',
+            '2025-10-20'
+        ];
+        const forecastValues = [
+            673, 760, 860,
+            1000, 1080, 1150,
+            1220
+        ];
+
+        // Combine and sort all dates for x-axis (only through Oct 20)
+        const allDates = [...new Set([...historicalDates, ...forecastDates])]
+            .sort((a, b) => new Date(a) - new Date(b));
+
+        // Align historical and forecast data to the same date array
+        const historicalDataPoints = allDates.map(date => {
+            const idx = historicalDates.indexOf(date);
+            return idx !== -1 ? historicalValues[idx] : null;
+        });
+
+        const forecastDataPoints = allDates.map(date => {
+            const idx = forecastDates.indexOf(date);
+            return idx !== -1 ? forecastValues[idx] : null;
+        });
+
+        // Milestone marker at first forecast date where value >= 1000
+        const milestoneIndex = forecastValues.findIndex(v => v >= 1000);
+        const milestoneDate = milestoneIndex !== -1 ? forecastDates[milestoneIndex] : null;
+        const milestoneValue = milestoneIndex !== -1 ? forecastValues[milestoneIndex] : null;
+
+        const milestoneData = allDates.map(date => {
+            if (!milestoneDate || date !== milestoneDate) return null;
+            return milestoneValue;
+        });
+
+        // Build display labels (e.g., "Oct 9") and find label for the milestone
+        const displayLabels = allDates.map(date => {
+            const d = new Date(date);
+            return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        });
+
+        let milestoneLabel = null;
+        if (milestoneDate) {
+            const d = new Date(milestoneDate);
+            milestoneLabel = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        }
+
+        const ctx = document.getElementById('forecastChart').getContext('2d');
+        
+        const chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: displayLabels,
+                datasets: [
+                    {
+                        label: 'Historical',
+                        data: historicalDataPoints,
+                        borderColor: '#5b4e77',
+                        backgroundColor: 'rgba(91, 78, 119, 0.05)',
+                        borderWidth: 3,
+                        pointRadius: 0,
+                        pointHoverRadius: 6,
+                        pointHoverBackgroundColor: '#5b4e77',
+                        pointHoverBorderColor: '#fff',
+                        pointHoverBorderWidth: 2,
+                        tension: 0.4,
+                        cubicInterpolationMode: 'monotone',
+                        fill: false,
+                        spanGaps: false,
+                        order: 3
+                    },
+                    {
+                        label: 'Forecast',
+                        data: forecastDataPoints,
+                        borderColor: '#b8a8cc',
+                        backgroundColor: 'rgba(184, 168, 204, 0.1)',
+                        borderWidth: 3,
+                        borderDash: [8, 4],
+                        pointRadius: 0,
+                        pointHoverRadius: 6,
+                        pointHoverBackgroundColor: '#b8a8cc',
+                        pointHoverBorderColor: '#fff',
+                        pointHoverBorderWidth: 2,
+                        tension: 0.4,
+                        cubicInterpolationMode: 'monotone',
+                        fill: false,
+                        spanGaps: true,
+                        order: 2
+                    },
+                    {
+                        label: 'Milestone Marker',
+                        data: milestoneData,
+                        pointStyle: 'rect',
+                        rotation: 45,
+                        pointRadius: 8,
+                        pointHoverRadius: 10,
+                        pointBackgroundColor: '#b8a8cc',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        showLine: false,
+                        order: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                layout: {
+                    padding: {
+                        top: 40,
+                        right: 40,
+                        left: 10,
+                        bottom: 10
+                    }
+                },
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(255, 255, 255, 0.98)',
+                        titleColor: '#1a202c',
+                        bodyColor: '#4a5568',
+                        borderColor: '#e2e8f0',
+                        borderWidth: 1,
+                        padding: 12,
+                        titleFont: {
+                            size: 13,
+                            weight: '600'
+                        },
+                        bodyFont: {
+                            size: 13
+                        },
+                        displayColors: false,
+                        callbacks: {
+                            label: function(context) {
+                                return context.parsed.y
+                                    ? context.parsed.y.toLocaleString() + ' completed tests'
+                                    : 'No data';
+                            }
+                        },
+                        filter: function(tooltipItem) {
+                            // Hide marker dataset from tooltip
+                            return tooltipItem.datasetIndex !== 2;
+                        }
+                    },
+                    annotation: {
+                        clip: false,
+                        annotations: {
+                            target: {
+                                type: 'line',
+                                yMin: 1000,
+                                yMax: 1000,
+                                borderColor: '#cbd5e0',
+                                borderWidth: 2,
+                                borderDash: [4, 4],
+                                drawTime: 'beforeDatasetsDraw'
+                            },
+                            projectedLabel: milestoneLabel && milestoneValue ? {
+                                type: 'label',
+                                xScaleID: 'x',
+                                yScaleID: 'y',
+                                xValue: milestoneLabel,
+                                yValue: milestoneValue,
+                                backgroundColor: 'rgba(184, 168, 204, 0.95)',
+                                borderRadius: 6,
+                                color: 'white',
+                                content: '1,000-test milestone: Projected Oct 9',
+                                font: {
+                                    size: 11,
+                                    weight: '600'
+                                },
+                                padding: 8,
+                                xAdjust: 0,
+                                yAdjust: -40,
+                                textAlign: 'center'
+                            } : {}
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            color: '#f1f3f5',
+                            drawBorder: false,
+                            lineWidth: 1
+                        },
+                        ticks: {
+                            color: '#718096',
+                            font: {
+                                size: 12
+                            },
+                            maxRotation: 0,
+                            autoSkip: true,
+                            maxTicksLimit: 8
+                        }
+                    },
+                    y: {
+                        min: 0,
+                        max: 1200,
+                        grid: {
+                            color: '#f1f3f5',
+                            drawBorder: false,
+                            lineWidth: 1
+                        },
+                        title: {
+                            display: true,
+                            text: 'Completed Test Results (Cumulative)',
+                            color: '#718096',
+                            font: {
+                                size: 13,
+                                weight: '500'
+                            },
+                            padding: {
+                                bottom: 10
+                            }
+                        },
+                        ticks: {
+                            color: '#718096',
+                            font: {
+                                size: 12,
+                                weight: 'normal'
+                            },
+                            stepSize: 200,
+                            callback: function(value) {
+                                return value.toLocaleString();
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
