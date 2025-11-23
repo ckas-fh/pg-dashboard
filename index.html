@@ -460,12 +460,20 @@
                         },
                         displayColors: false,
                         callbacks: {
-                            label: function(context) {
-                                return context.parsed.y
-                                    ? context.parsed.y.toLocaleString() + ' completed tests'
-                                    : 'No data';
-                            }
-                        },
+    label: function(context) {
+        const value = context.parsed.y;
+
+        if (!value) return 'No data';
+
+        // datasetIndex 0 = historical, 1 = forecast, 2 = diamond marker
+        if (context.datasetIndex === 1) {
+            return value.toLocaleString() + ' forecasted completed tests';
+        }
+
+        return value.toLocaleString() + ' completed tests';
+    }
+}
+,
                         filter: function(tooltipItem) {
                             // Hide marker dataset from tooltip
                             return tooltipItem.datasetIndex !== 2;
